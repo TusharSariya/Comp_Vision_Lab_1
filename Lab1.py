@@ -8,7 +8,17 @@ Created on Mon Feb  3 01:32:57 2020
 import cv2
 import numpy as np
 import argparse
+class point:
+    def __init__(self,c0,c1):
+        self.c0 = c0
+        self.c1 = c1
 
+class line:
+    def __init__(self, x0, y0, x1, y1):
+        self.x0 = x0
+        self.y0 = y0
+        self.x1 = x1
+        self.y1 = y1
 
 def viewImage(image):
     cv2.namedWindow('Display', cv2.WINDOW_NORMAL)
@@ -16,11 +26,32 @@ def viewImage(image):
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-ap = argparse.ArgumentParser()
-ap.add_argument("-i", "--image", required = True, help = "Path to the image")
-args = vars(ap.parse_args())
+def line_intersection(line1, line2):
+    def det(a, b, c, d):
+        return a*d - b*c
+
+    bottom = (line1.x0-line1.x1)*(line2.y0-line2.y1) - (line1.y0-line1.y1)*(line2.x0 - line2.x1)
+
+    a = det(line1.x0, line1.y0, line1.x1, line1.y1)
+    b = det(line1.x0, 1, line1.x1, 1)
+    c = det(line2.x0, line2.y0, line2.x1, line2.y1)
+    d = det(line2.x0, 1, line2.x1, 1)
+    top = det(a,b,c,d)
+    Px = abs((int)(top/bottom))
+
+    a = det(line1.x0, line1.y0, line1.x1, line1.y1)
+    b = det(line1.y0, 1, line1.y1, 1)
+    c = det(line2.x0, line2.y0, line2.x1, line2.y1)
+    d = det(line2.y0, 1, line2.y1, 1)
+    top = det(a,b,c,d)
+    Py = abs((int)(top/bottom))
+    return (Px,Py)
+#ap = argparse.ArgumentParser()
+#ap.add_argument("-i", "--image", required = True, help = "Path to the image")
+#args = vars(ap.parse_args())
  
-img = cv2.imread(args["image"])
+#img = cv2.imread(args["image"])
+img = cv2.imread("test1.JPG")
 size = img.shape
 viewImage(img)
 gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
@@ -28,6 +59,7 @@ edges = cv2.Canny(gray,100,150)# The parameters are the thresholds for Canny
 
 lines = cv2.HoughLines(edges,0.5,0.01,300) # The parameters are accuracies and threshold
 num = len(lines)
+line_points = []
 for n in range(num):
     rho, theta = lines[n][0]
     a = np.cos(theta)
@@ -41,5 +73,15 @@ for n in range(num):
 
     cv2.line(img,(x1,y1),(x2,y2),(0,0,255),2)
 
+    line_points.append(line(x0,y0,x1,y1))
+
 viewImage(img)
 cv2.imwrite('houghlines1.jpg',img)
+
+for n in range(num-1):
+    for j in range(n+1,num):
+        intersection = line_intersection(line_points[n],line_points[j])
+        cv2.circle(img, intersection, 25, (0, 255, 255), thickness=-1, lineType=cv2.FILLED)
+
+viewImage(img)
+cv2.imwrite('intersection.jpg',img)
