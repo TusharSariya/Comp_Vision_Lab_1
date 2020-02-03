@@ -7,6 +7,7 @@ Created on Mon Feb  3 01:32:57 2020
 
 import cv2
 import numpy as np
+import argparse
 
 
 def viewImage(image):
@@ -15,7 +16,11 @@ def viewImage(image):
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-img = cv2.imread('test1.JPG') # Remember to add the path for the test1.jpg
+ap = argparse.ArgumentParser()
+ap.add_argument("-i", "--image", required = True, help = "Path to the image")
+args = vars(ap.parse_args())
+ 
+img = cv2.imread(args["image"])
 size = img.shape
 viewImage(img)
 gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
