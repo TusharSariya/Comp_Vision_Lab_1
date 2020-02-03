@@ -54,42 +54,53 @@ def line_intersection(line1, line2):
 #img = cv2.imread("test1.JPG")
 cv2.namedWindow('Display', cv2.WINDOW_NORMAL)
 cap = cv2.VideoCapture("Movie1.MOV")
+n = 0
 while(cap.isOpened()):
     hasframe, img = cap.read()
-    size = img.shape
-    viewImage(img)
-    gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-    edges = cv2.Canny(gray,100,150)# The parameters are the thresholds for Canny
+    if (n % 30.0==0):
+        print("show frame")
+        size = img.shape
+        #viewImage(img)
+        gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+        edges = cv2.Canny(gray,100,150)# The parameters are the thresholds for Canny
 
-    lines = cv2.HoughLines(edges,0.5,0.01,300) # The parameters are accuracies and threshold
-    num = len(lines)
-    line_points = []
-    for n in range(num):
-        rho, theta = lines[n][0]
-        a = np.cos(theta)
-        b = np.sin(theta)
-        x0 = a*rho
-        y0 = b*rho
-        x1 = int(x0 + size[1]*(-b))
-        y1 = int(y0 + size[0]*(a))
-        x2 = int(x0 - size[1]*(-b))
-        y2 = int(y0 - size[0]*(a))
+        lines = cv2.HoughLines(edges,0.5,0.01,300) # The parameters are accuracies and threshold
 
-        cv2.line(img,(x1,y1),(x2,y2),(0,0,255),2)
+        try:
+            num = len(lines)
+        except:
+            print("error here")
+            continue
 
-        line_points.append(line(x0,y0,x1,y1))
+        line_points = []
+        for n in range(num):
+            rho, theta = lines[n][0]
+            a = np.cos(theta)
+            b = np.sin(theta)
+            x0 = a*rho
+            y0 = b*rho
+            x1 = int(x0 + size[1]*(-b))
+            y1 = int(y0 + size[0]*(a))
+            x2 = int(x0 - size[1]*(-b))
+            y2 = int(y0 - size[0]*(a))
 
-    viewImage(img)
-    cv2.imwrite('houghlines1.jpg',img)
+            cv2.line(img,(x1,y1),(x2,y2),(0,0,255),2)
 
-    for n in range(num-1):
-        for j in range(n+1,num):
-            intersection = line_intersection(line_points[n],line_points[j])
-            print(intersection[0]," ",intersection[1])
-            if(intersection[0]<3000 and intersection[0]<3000):
-                cv2.circle(img, intersection, 25, (0, 255, 255), thickness=-1, lineType=cv2.FILLED)
+            line_points.append(line(x0,y0,x1,y1))
 
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-    viewImage(img)
-    cv2.imwrite('intersection.jpg',img)
+        #viewImage(img)
+        cv2.imwrite('houghlines1.jpg',img)
+
+        for n in range(num-1):
+            for j in range(n+1,num):
+                intersection = line_intersection(line_points[n],line_points[j])
+                print(intersection[0]," ",intersection[1])
+                if(intersection[0]<3000 and intersection[1]<3000):
+                    cv2.circle(img, intersection, 25, (0, 255, 255), thickness=-1, lineType=cv2.FILLED)
+
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+        viewImage(img)
+        cv2.imwrite('intersection.jpg',img)
+    n = n + 1
+    print(n)
