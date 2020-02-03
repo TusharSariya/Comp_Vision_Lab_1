@@ -53,18 +53,24 @@ def line_intersection(line1, line2):
 #img = cv2.imread(args["image"])
 #img = cv2.imread("test1.JPG")
 cv2.namedWindow('Display', cv2.WINDOW_NORMAL)
-cap = cv2.VideoCapture("Movie1.MOV")
-n = 0
+#cap = cv2.VideoCapture("Movie1.MOV")
+cap = cv2.VideoCapture("test4.JPG")
+frames = -1
 while(cap.isOpened()):
+    frames += 1
     hasframe, img = cap.read()
-    if (n % 30.0==0):
+    if (frames % 30.0==0):
         print("show frame")
-        size = img.shape
-        #viewImage(img)
+        try:
+            size = img.shape
+        except:
+            print("out of frames")
+            break
+
         gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
         edges = cv2.Canny(gray,100,150)# The parameters are the thresholds for Canny
 
-        lines = cv2.HoughLines(edges,0.5,0.01,300) # The parameters are accuracies and threshold
+        lines = cv2.HoughLines(edges,0.5,0.01,200) # The parameters are accuracies and threshold
 
         try:
             num = len(lines)
@@ -94,13 +100,13 @@ while(cap.isOpened()):
         for n in range(num-1):
             for j in range(n+1,num):
                 intersection = line_intersection(line_points[n],line_points[j])
-                print(intersection[0]," ",intersection[1])
                 if(intersection[0]<3000 and intersection[1]<3000):
                     cv2.circle(img, intersection, 25, (0, 255, 255), thickness=-1, lineType=cv2.FILLED)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
         viewImage(img)
-        cv2.imwrite('intersection.jpg',img)
-    n = n + 1
-    print(n)
+        #cv2.imwrite('intersection.jpg',img)
+    print(frames)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
