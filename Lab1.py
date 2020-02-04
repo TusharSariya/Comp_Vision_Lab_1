@@ -20,7 +20,7 @@ class line:
 def viewImage(image):
     #cv2.namedWindow('Display', cv2.WINDOW_NORMAL)
     cv2.imshow('Display', image)
-    #cv2.waitKey(0)
+    cv2.waitKey(0)
     #cv2.destroyAllWindows()
 
 def line_intersection(line1, line2):
@@ -69,7 +69,10 @@ while(cap.isOpened()):
 
         gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
         edges = cv2.Canny(gray,100,150)# The parameters are the thresholds for Canny
-
+        viewImage(edges)
+        kernel = np.ones((5,5),np.uint8)
+        edges = cv2.dilate(edges,kernel, iterations = 1)
+        viewImage(edges)
         lines = cv2.HoughLines(edges,0.5,0.01,200) # The parameters are accuracies and threshold
 
         try:
