@@ -9,6 +9,7 @@ import cv2
 import numpy as np
 import argparse
 
+#class for a line with end points defined
 class line:
     def __init__(self, x0, y0, x1, y1):
         self.x0 = x0
@@ -16,13 +17,9 @@ class line:
         self.x1 = x1
         self.y1 = y1
 
-#cv2.namedWindow('Display', cv2.WINDOW_NORMAL)
-def viewImage(image):
-    #cv2.namedWindow('Display', cv2.WINDOW_NORMAL)
-    cv2.imshow('Display', image)
-    cv2.waitKey(0)
-    #cv2.destroyAllWindows()
-
+#calculates intersetion using the begaining and end coordinates of each line
+#parameters: two lines
+#return: point of intersection
 def line_intersection(line1, line2):
     def det(a, b, c, d):
         return a*d - b*c
@@ -46,41 +43,40 @@ def line_intersection(line1, line2):
     top = det(a,b,c,d)
     Py = abs((int)(top/bottom))
     return (Px,Py)
-#ap = argparse.ArgumentParser()
-#ap.add_argument("-i", "--image", required = True, help = "Path to the image")
-#args = vars(ap.parse_args())
- 
-#img = cv2.imread(args["image"])
-#img = cv2.imread("test1.JPG")
+
+ap = argparse.ArgumentParser()
+ap.add_argument("-i", "--input", required = True, help = "Path to the image")
+args = vars(ap.parse_args())
+cap = cv2.VideoCapture(args["input"]) #get the frame or image
+
 cv2.namedWindow('Display', cv2.WINDOW_NORMAL)
-#cap = cv2.VideoCapture("Movie1.MOV")
-cap = cv2.VideoCapture("test4.JPG")
 frames = -1
+# iterate through all frames
 while(cap.isOpened()):
     frames += 1
-    hasframe, img = cap.read()
+    hasframe, img = cap.read() #capture frame
+    # see if frame exists, if it doesnt we are out of frames or there is another error
+    try:
+        size = img.shape
+    except:
+        print("out of frames")
+        break
+    # show every 30th frame, break if no images left
     if (frames % 30.0==0):
-        print("show frame")
-        try:
-            size = img.shape
-        except:
-            print("out of frames")
-            break
-
+        # convert to grey scale and create Hough Lines
         gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
         edges = cv2.Canny(gray,100,150)# The parameters are the thresholds for Canny
-        viewImage(edges)
-        kernel = np.ones((5,5),np.uint8)
-        edges = cv2.dilate(edges,kernel, iterations = 1)
-        viewImage(edges)
-        lines = cv2.HoughLines(edges,0.5,0.01,200) # The parameters are accuracies and threshold
+        lines = cv2.HoughLines(edges,0.5,0.01,300) # The parameters are accuracies and threshold
 
+        # if there are no hough lines then skip the rest of the operations
         try:
             num = len(lines)
         except:
-            print("error here")
+            print("No Hough Lines")
             continue
-
+        
+        # go from rho and theta coordinates to x and y coordinates of the begaining and end of the line and draw
+        # rho,theta --> (x,y)start & (x,y)end
         line_points = []
         for n in range(num):
             rho, theta = lines[n][0]
@@ -97,9 +93,10 @@ while(cap.isOpened()):
 
             line_points.append(line(x0,y0,x1,y1))
 
-        #viewImage(img)
         cv2.imwrite('houghlines1.jpg',img)
 
+        # calculate intersections for all lines and draw intersection
+        # O(n^2)
         for n in range(num-1):
             for j in range(n+1,num):
                 intersection = line_intersection(line_points[n],line_points[j])
@@ -108,8 +105,9 @@ while(cap.isOpened()):
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
-        viewImage(img)
-        #cv2.imwrite('intersection.jpg',img)
+        cv2.imshow('Display', img)
+        cv2.waitKey(0)
+        cv2.imwrite('intersection.jpg',img)
     print(frames)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
