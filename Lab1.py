@@ -3,6 +3,8 @@
 Created on Mon Feb  3 01:32:57 2020
 
 @author: ebrahim
+
+Modified by Tushar Sariya and Richard Walmsley
 """
 
 import cv2
@@ -28,7 +30,7 @@ def line_intersection(line1, line2):
 
     if bottom == 0:
         return ( -50,-50)
-    
+
     a = det(line1.x0, line1.y0, line1.x1, line1.y1)
     b = det(line1.x0, 1, line1.x1, 1)
     c = det(line2.x0, line2.y0, line2.x1, line2.y1)
@@ -65,8 +67,10 @@ while(cap.isOpened()):
     if (frames % 30.0==0):
         # convert to grey scale and create Hough Lines
         gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-        edges = cv2.Canny(gray,100,150)# The parameters are the thresholds for Canny
-        lines = cv2.HoughLines(edges,0.5,0.01,300) # The parameters are accuracies and threshold
+        median = cv2.medianBlur(gray, 5)
+        gaussian = cv2.GaussianBlur(median, (5,5), cv2.BORDER_DEFAULT)
+        edges = cv2.Canny(gaussian,150,200)# The parameters are the thresholds for Canny
+        lines = cv2.HoughLines(edges,0.5,0.01,230) # The parameters are accuracies and threshold
 
         # if there are no hough lines then skip the rest of the operations
         try:
@@ -74,7 +78,7 @@ while(cap.isOpened()):
         except:
             print("No Hough Lines")
             continue
-        
+
         # go from rho and theta coordinates to x and y coordinates of the begaining and end of the line and draw
         # rho,theta --> (x,y)start & (x,y)end
         line_points = []
